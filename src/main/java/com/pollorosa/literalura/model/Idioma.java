@@ -4,6 +4,8 @@ public enum Idioma {
     es("es", "español"),
     en("en", "inglés"),
     fr("fr", "francés"),
+    nl("nl", "holandés"),
+    de("de", "alemán"),
     pt("pt", "portugués");
 
     private String idiomaAPI;
@@ -23,8 +25,7 @@ public enum Idioma {
         throw new IllegalArgumentException("Ningún idioma encontrado: " + text);
     }
 
-    @Override
-    public String toString() {
+    public String imprimir() {
         return idiomaAPI + " - " + idiomaNombreCompleto;
     }
 }
