@@ -1,17 +1,26 @@
 package com.pollorosa.literalura.principal;
 
 import com.pollorosa.literalura.config.Constantes;
-import com.pollorosa.literalura.model.DatosAutor;
-import com.pollorosa.literalura.model.DatosLibro;
-import com.pollorosa.literalura.model.DatosResultado;
+import com.pollorosa.literalura.model.*;
+import com.pollorosa.literalura.repository.AutorRepository;
+import com.pollorosa.literalura.repository.LibroRepository;
 import com.pollorosa.literalura.service.ConsultaDatos;
+import org.springframework.dao.DataIntegrityViolationException;
 
+import java.util.Comparator;
+import java.util.List;
 import java.util.Scanner;
-import java.util.stream.Collectors;
 
 public class Principal {
-    ConsultaDatos consultaDatos = new ConsultaDatos();
-    Scanner teclado = new Scanner(System.in);
+    private ConsultaDatos consultaDatos = new ConsultaDatos();
+    private Scanner teclado = new Scanner(System.in);
+    private LibroRepository repoLibro;
+    private AutorRepository repoAutor;
+
+    public Principal(LibroRepository repoLibro, AutorRepository repoAutor) {
+        this.repoLibro = repoLibro;
+        this.repoAutor = repoAutor;
+    }
 
     public void iniciar() {
         var opcion = -1;
@@ -33,6 +42,9 @@ public class Principal {
                 case 1: 
                     buscarLibroPorTitulo();
                     break;
+                case 2:
+                    listarLibrosRegistrados();
+                    break;
                 case 0:
                     System.out.println("Cerrando la aplicación.");
                     break;
@@ -45,22 +57,34 @@ public class Principal {
     private void buscarLibroPorTitulo() {
         DatosLibro datos = obtenerDatosLibro();
         if(datos != null) {
-            String plantilla = """
-                    ----- LIBRO -----
-                    Título: %s
-                    Autor: %s
-                    Idioma: %s
-                    Número de descargas: %d
-                    -----------------
-                    """;
-            String autores = datos.autores().stream()
-                    .map(DatosAutor::nombre)
-                    .collect(Collectors.joining(" - "));
-            String idiomas = datos.idiomas().stream()
-                    .map(Enum::toString)
-                    .collect(Collectors.joining(", "));
-            System.out.printf(plantilla, datos.titulo(), autores, idiomas, datos.numeroDescargas());
+            Libro nuevoLibro = new Libro(datos);
+            Autor nuevoAutor = nuevoLibro.getAutor();
+            if(nuevoAutor == null) {
+                System.out.println("No se puede registrar el libro porque no tiene autor.");
+                return;
+            }
+            Autor registrado = validarAutorRegistrado(nuevoAutor);
+            if(registrado != null) {
+                nuevoAutor.setId(registrado.getId());
+            }
+            nuevoAutor.agregarLibro(nuevoLibro);
+            try {
+                repoAutor.save(nuevoAutor);
+                imprimirLibro(nuevoLibro);
+            } catch (DataIntegrityViolationException e) {
+                System.out.println("No se puede registrar el mismo libro más de una vez.");
+            }
         }
+    }
+
+    private Autor validarAutorRegistrado(Autor autor) {
+        List<Autor> resultado = repoAutor.findByNombreIgnoreCase(autor.getNombre());
+        // si hay resultado es porque el autor ya está registrado
+        if(!resultado.isEmpty()) {
+            // se devuelve el autor encontrado
+            return resultado.get(0);
+        }
+        return null;
     }
 
     private DatosLibro obtenerDatosLibro() {
@@ -75,14 +99,24 @@ public class Principal {
         System.out.println("Libro no encontrado");
         return null;
     }
+
+    private void imprimirLibro(Libro libro) {
+        String plantilla = """
+                    ----- LIBRO -----
+                    Título: %s
+                    Autor: %s
+                    Idioma: %s
+                    Número de descargas: %d
+                    -----------------
+                    """;
+        System.out.printf(plantilla, libro.getTitulo(), libro.getAutor()!=null ? libro.getAutor().getNombre() : "", libro.getIdioma(), libro.getNumeroDescargas());
+        System.out.println();
+    }
+
+    private void listarLibrosRegistrados() {
+        List<Libro> libros = repoLibro.findAll();
+        libros.stream()
+                .sorted(Comparator.comparing(Libro::getTitulo))
+                .forEach(this::imprimirLibro);
+    }
 }
-
-/*   PARA TESTEAR
-Beowulf: An Anglo-Saxon Epic Poem
-
-sin autores
-
-Twenty years after
-
-2 autores
- */

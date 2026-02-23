@@ -6,6 +6,8 @@ public enum Idioma {
     fr("fr", "francés"),
     nl("nl", "holandés"),
     de("de", "alemán"),
+    tl("tl", "tagalog"),
+    zh("zh", "chino"),
     pt("pt", "portugués");
 
     private String idiomaAPI;
