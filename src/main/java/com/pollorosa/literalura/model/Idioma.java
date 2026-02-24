@@ -20,14 +20,14 @@ public enum Idioma {
 
     public static Idioma fromString(String text) {
         for (Idioma idi : Idioma.values()) {
-            if (idi.idiomaAPI.equalsIgnoreCase(text)) {
+            if (idi.idiomaAPI.equalsIgnoreCase(text) || idi.idiomaNombreCompleto.equalsIgnoreCase(text)) {
                 return idi;
             }
         }
-        throw new IllegalArgumentException("Ningún idioma encontrado: " + text);
+        return null;
     }
 
-    public String imprimir() {
+    public String getParaImprimir() {
         return idiomaAPI + " - " + idiomaNombreCompleto;
     }
 }

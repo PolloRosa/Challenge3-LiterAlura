@@ -20,7 +20,7 @@ public class Autor {
 
     private Integer anioFallecimiento;
 
-    @OneToMany(mappedBy = "autor", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "autor", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<Libro> libros;
 
     public Autor() {}
@@ -64,11 +64,11 @@ public class Autor {
         this.anioFallecimiento = anioFallecimiento;
     }
 
-    public List<Libro> getLibro() {
+    public List<Libro> getLibros() {
         return libros;
     }
 
-    public void setLibro(List<Libro> libros) {
+    public void setLibros(List<Libro> libros) {
         libros.forEach(l -> l.setAutor(this));
         this.libros = libros;
     }
